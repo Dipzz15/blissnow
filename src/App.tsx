@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { Menu, X, Phone, Mail, MapPin, ChevronRight, ArrowRight, CheckCircle, Star } from 'lucide-react';
+import { Menu, X, Phone, Mail, MapPin, ChevronRight, CheckCircle, Star } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -11,7 +11,6 @@ import imgThaiMassage from './assets/img_thai_massage.jpg';
 import imgBiohealing from './assets/img_biohealing.jpg';
 import imgYogaBalance from './assets/img_yoga_balance.jpg';
 import imgWellnessPool from './assets/img_wellness_pool.jpg';
-import imgColdPlunge from './assets/img_cold_plunge.jpg';
 import imgGroupYoga from './assets/img_group_yoga.jpg';
 import imgFitnessTraining from './assets/img_fitness_training.jpg';
 import imgDryNeedling from './assets/img_dry_needling.jpg';
@@ -19,8 +18,6 @@ import imgBiowell from './assets/img_biowell.jpg';
 import imgRedLight from './assets/img_red_light.jpg';
 
 const gold = '#059669';
-const goldLight = '#34d399';
-const dark = '#0a0a0f';
 const cream = '#f5f0e8';
 const LOGO = 'https://kubattyperfumes.com/demo3/wp-content/uploads/2026/02/logo.png';
 const WLOGO = 'https://kubattyperfumes.com/demo3/wp-content/uploads/2026/02/wlogo.png';
@@ -740,7 +737,7 @@ function Home({onLogin}:{onLogin:()=>void}) {
                   <img src={t.img} alt="" style={{width:40,height:40,borderRadius:'50%',objectFit:'cover',border:'2px solid #e4e4e7'}}/>
                   <div>
                     <div style={{fontSize:13,fontWeight:600,color:'#18181b'}}>{t.name}</div>
-                    <div style={{fontSize:10,letterSpacing:'1px',color:t.verified?'#4285F4':'#059669'}}>{t.role}</div>
+                    <div style={{fontSize:10,letterSpacing:'1px',color:t.verified?'#4285F4':'#059669'}}>{t.verified ? 'Google Review' : ''}</div>
                   </div>
                 </div>
               </motion.div>
@@ -952,7 +949,7 @@ function About() {
             <p style={{maxWidth:600,margin:'16px auto 0',fontSize:14,lineHeight:1.8,color:'#a1a1aa'}}>A multidisciplinary leadership team spanning hospitality, healthcare operations, genomics, fitness science, and digital health infrastructure.</p>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:20}}>
-            {[{name:'Harrison Hudson',role:'WordPress Dev.',img:{imgFitnessTraining}},{name:'Elizabeth Sofia',role:'WordPress Dev.',img:{imgYogaBalance}},{name:'Lucy Evelyn',role:'UI/UX Designer',img:{imgDryNeedling}}].map((m,i)=>(
+            {[{name:'Harrison Hudson',role:'WordPress Dev.',img:imgFitnessTraining},{name:'Elizabeth Sofia',role:'WordPress Dev.',img:imgYogaBalance},{name:'Lucy Evelyn',role:'UI/UX Designer',img:imgDryNeedling}].map((m,i)=>(
               <motion.div key={i} className="card" whileHover={{y:-6}}
                 initial={{opacity:0,y:40}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'-40px'}}
                 transition={{duration:.65,delay:i*0.15,ease:[0.25,0.46,0.45,0.94]}}
@@ -1041,9 +1038,9 @@ function Ecosystem() {
         <p style={{fontSize:16,lineHeight:1.9,color:'#71717a',maxWidth:720,marginBottom:12}}>Bliss Now Global operates as a connected health infrastructure -- uniting clinical care, genomics, and digital intelligence under one vision.</p>
         <div style={{fontSize:11,letterSpacing:'3px',textTransform:'uppercase',color:'#059669',marginBottom:64}}>Three verticals. One integrated model.</div>
         {[
-          {tag:'Bliss Now Integrative Care Hub',title:'Integrative & Mobile Clinics',img:{imgBiohealing},points:['Structured, preventive, and recovery-focused healthcare delivered through regulated clinics and mobile activations.','Integrative medicine.','Longevity pathways.','Performance and recovery optimization.'],reverse:false},
-          {tag:'Bliss Now Origins',title:'Genomics & Precision Wellness',img:{imgBiowell},desc:'Transforming DNA and biomarker insights into personalized health intelligence. From genetic analysis to structured activation pathways, Origins powers preventive and predictive wellbeing across industries.',reverse:true},
-          {tag:'Bliss Now Life',title:'Digital Health Intelligence Platform',img:{imgRedLight},desc:'An AI-powered human-first integrative twin platform combining genetics-informed biological blueprints, real-time health data and adaptive personalized intervention strategies into one unified ecosystem.',sub:'Educate • Monitor • Support',reverse:false},
+          {tag:'Bliss Now Integrative Care Hub',title:'Integrative & Mobile Clinics',img:imgBiohealing,points:['Structured, preventive, and recovery-focused healthcare delivered through regulated clinics and mobile activations.','Integrative medicine.','Longevity pathways.','Performance and recovery optimization.'],reverse:false},
+          {tag:'Bliss Now Origins',title:'Genomics & Precision Wellness',img:imgBiowell,desc:'Transforming DNA and biomarker insights into personalized health intelligence. From genetic analysis to structured activation pathways, Origins powers preventive and predictive wellbeing across industries.',reverse:true},
+          {tag:'Bliss Now Life',title:'Digital Health Intelligence Platform',img:imgRedLight,desc:'An AI-powered human-first integrative twin platform combining genetics-informed biological blueprints, real-time health data and adaptive personalized intervention strategies into one unified ecosystem.',sub:'Educate • Monitor • Support',reverse:false},
         ].map((v,i)=>(
           <div key={i}>
             {i>0&&<div style={{margin:'64px 0'}}><GL/></div>}
@@ -1090,8 +1087,9 @@ function Contact() {
     );
 
     setSending(true);
+    console.log('Form submitted:', safeForm);
     await new Promise(r=>setTimeout(r,1200));
-    toast.success('Thank you! Form submitted successfully ✦');
+    toast.success('Thank you! We will contact you soon ✦');
     setForm({name:'',email:'',phone:'',company:'',subject:'',message:''});
     setSending(false);
   };
@@ -1125,7 +1123,7 @@ function Contact() {
             <FadeIn direction="right" delay={0.1}>
             <div style={{fontSize:9,letterSpacing:'4px',textTransform:'uppercase',color:'#059669',marginBottom:24}}>Reach Out</div>
             <p style={{fontSize:14,lineHeight:1.9,color:'#71717a',marginBottom:36}}>Reach out to explore how our consulting approach can help you create healthier routines, clearer boundaries, and sustainable balance in your work and life.</p>
-            {[{icon:<Phone style={{width:16,height:16}}/>,label:'Phone',value:'+971 567-8900'},{icon:<Mail style={{width:16,height:16}}/>,label:'Email',value:'hello@blissnow.ae'}].map((c,i)=>(
+            {[{icon:<Phone style={{width:16,height:16}}/>,label:'Phone',value:'+971 56 480 9600'},{icon:<Mail style={{width:16,height:16}}/>,label:'Email',value:'hello@blissnow.ae'}].map((c,i)=>(
               <motion.div key={i} className="card" whileHover={{x:4}} style={{display:'flex',gap:16,padding:'18px 22px',marginBottom:12,background:'#f4f4f5'}}>
                 <div style={{width:36,height:36,display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid #d4d4d8',color:'#059669',flexShrink:0}}>{c.icon}</div>
                 <div><div style={{fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#a1a1aa',marginBottom:4}}>{c.label}</div><div style={{fontSize:14,color:'#18181b'}}>{c.value}</div></div>
@@ -1143,7 +1141,64 @@ function Contact() {
                 BLISS NOW PTE LTD<br/>531A Upper Cross St, #04-95<br/>Singapore 051531
               </div>
             </div>
+
+            {/* WhatsApp direct contact */}
+            <motion.a
+              href="https://wa.me/971564809600?text=Hello%20Bliss%20Now!%20I%20would%20like%20to%20book%20a%20session."
+              target="_blank" rel="noopener noreferrer"
+              whileHover={{scale:1.02}} whileTap={{scale:0.98}}
+              style={{
+                display:'flex', alignItems:'center', gap:14,
+                padding:'16px 22px', marginTop:16,
+                background:'linear-gradient(135deg,#25D366,#128C7E)',
+                borderRadius:8, textDecoration:'none', cursor:'pointer',
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white" style={{flexShrink:0}}>
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              </svg>
+              <div>
+                <div style={{color:'white',fontWeight:600,fontSize:13,letterSpacing:'1px'}}>CHAT ON WHATSAPP</div>
+                <div style={{color:'rgba(255,255,255,0.85)',fontSize:12}}>+971 56 480 9600 — Instant reply</div>
+              </div>
+            </motion.a>
             </FadeIn>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Google Maps Embed ── */}
+      <div style={{width:'100%',borderTop:'1px solid #e4e4e7'}}>
+        <div style={{maxWidth:1200,margin:'0 auto',padding:'0 24px 80px'}}>
+          <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',margin:'48px 0 20px'}}>Find Us</div>
+          <h2 className="fd" style={{fontSize:'clamp(24px,3vw,40px)',color:'#18181b',marginBottom:28}}>Silicon Central Mall, Dubai Silicon Oasis</h2>
+          <div style={{borderRadius:16,overflow:'hidden',boxShadow:'0 4px 24px rgba(0,0,0,0.08)',border:'1px solid #e4e4e7'}}>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3610.178384537517!2d55.37800937600754!3d25.11825953291535!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f65f93e45b337%3A0xf93a66b70b16e81f!2sSilicon%20Central%20Mall!5e0!3m2!1sen!2sae!4v1708000000000!5m2!1sen!2sae"
+              width="100%"
+              height="420"
+              style={{border:0,display:'block'}}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Bliss Now Recovery Wellness Clinic - Silicon Central Mall Dubai"
+            />
+          </div>
+          <div style={{display:'flex',gap:24,marginTop:20,flexWrap:'wrap'}}>
+            <a
+              href="https://maps.google.com/?q=Silicon+Central+Mall+Dubai+Silicon+Oasis"
+              target="_blank" rel="noopener noreferrer"
+              style={{display:'inline-flex',alignItems:'center',gap:8,padding:'12px 24px',background:'#059669',color:'white',borderRadius:8,fontSize:12,letterSpacing:'1px',textTransform:'uppercase',fontWeight:600,textDecoration:'none'}}
+            >
+              <MapPin style={{width:16,height:16}}/> Get Directions
+            </a>
+            <a
+              href="https://wa.me/971564809600?text=Hello!%20I%20need%20directions%20to%20Bliss%20Now%20clinic."
+              target="_blank" rel="noopener noreferrer"
+              style={{display:'inline-flex',alignItems:'center',gap:8,padding:'12px 24px',background:'#25D366',color:'white',borderRadius:8,fontSize:12,letterSpacing:'1px',textTransform:'uppercase',fontWeight:600,textDecoration:'none'}}
+            >
+              Ask on WhatsApp
+            </a>
           </div>
         </div>
       </div>
@@ -1224,6 +1279,35 @@ export default function App() {
         </Routes>
         <Footer/>
         <AuthModal isOpen={showAuth} onClose={()=>setShowAuth(false)} isSignup={isSignup} setIsSignup={setIsSignup}/>
+
+        {/* ── WhatsApp Floating Button ── */}
+        <motion.a
+          href="https://wa.me/971564809600?text=Hello%20Bliss%20Now!%20I%20would%20like%20to%20know%20more%20about%20your%20services."
+          target="_blank" rel="noopener noreferrer"
+          initial={{scale:0,opacity:0}}
+          animate={{scale:1,opacity:1}}
+          transition={{delay:2,type:'spring',stiffness:200}}
+          whileHover={{scale:1.12}}
+          whileTap={{scale:0.95}}
+          style={{
+            position:'fixed', bottom:28, right:28, zIndex:999,
+            width:56, height:56, borderRadius:'50%',
+            background:'linear-gradient(135deg,#25D366,#128C7E)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            boxShadow:'0 4px 20px rgba(37,211,102,0.5)',
+            cursor:'pointer', textDecoration:'none',
+          }}
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          </svg>
+          {/* Pulse ring */}
+          <motion.div
+            animate={{scale:[1,1.5,1],opacity:[0.6,0,0.6]}}
+            transition={{duration:2,repeat:Infinity}}
+            style={{position:'absolute',inset:0,borderRadius:'50%',border:'2px solid #25D366'}}
+          />
+        </motion.a>
       </div>
     </>
   );
