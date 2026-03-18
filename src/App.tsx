@@ -478,6 +478,7 @@ function Footer({onBook}:{onBook:()=>void}) {
             {['Privacy Policy','Terms & Conditions','Data Privacy & Consent','Careers'].map(l=>(
               <div key={l} style={{fontSize:12,color:'#a1a1aa',marginBottom:10,cursor:'pointer'}}>{l}</div>
             ))}
+            <button className="btn-gold" onClick={onBook} style={{padding:'10px 20px',marginTop:12}}>Book Now</button>
           </div>
           <div>
             <div style={{fontSize:9,letterSpacing:'4px',textTransform:'uppercase',color:'#059669',marginBottom:18}}>Information</div>
@@ -804,7 +805,6 @@ function Ecosystem() {
 }
 
 function Contact({onBook}:{onBook:()=>void}) {
-  const [form,setForm]=useState({name:'',email:'',phone:'',company:'',subject:'',message:''});
   const [sending,setSending]=useState(false);
   const handle=async(e:React.FormEvent)=>{
     e.preventDefault();
@@ -841,6 +841,7 @@ function Contact({onBook}:{onBook:()=>void}) {
         <div style={{maxWidth:1200,margin:'0 auto'}}>
           <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',marginBottom:8}}>Contact Us</div>
           <h1 className="fd" style={{fontSize:'clamp(36px,5vw,72px)',color:'#18181b',lineHeight:1.1}}>Your Next Step<br/><em style={{color:'#059669'}}>Starts Here</em></h1>
+          <motion.button className="btn-gold" onClick={onBook} whileHover={{scale:1.03}} style={{padding:'14px 40px',marginTop:28}}>Book Appointment ✦</motion.button>
         </div>
       </div>
       <div style={{maxWidth:1200,margin:'0 auto',padding:'80px 24px'}}>
