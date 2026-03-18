@@ -1,10 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
-import { supabase } from './lib/supabase';
+// ── DUMMY DATABASE (replace with real Supabase later) ──
+// TO SWITCH TO REAL SUPABASE:
+//   1. Run: npm install @supabase/supabase-js
+//   2. Create src/lib/supabase.ts with your credentials
+//   3. Replace the mock below with: import { supabase } from './lib/supabase';
+const supabase = {
+  from: (_table: string) => ({
+    insert: async (_data: any[]) => {
+      // Simulate network delay
+      await new Promise(r => setTimeout(r, 1200));
+      // Store locally so you can see bookings during demo
+      const existing = JSON.parse(localStorage.getItem('bliss_appointments') || '[]');
+      existing.push({ ..._data[0], id: Date.now() });
+      localStorage.setItem('bliss_appointments', JSON.stringify(existing));
+      console.log('📋 Appointment saved (dummy):', _data[0]);
+      return { error: null };
+    }
+  })
+};
 import { Menu, X, Phone, Mail, MapPin, ChevronRight, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { format } from 'date-fns';
+
 
 // ── Local Images (place these in src/assets/ folder) ──
 import imgThaiMassage from './assets/img_thai_massage.jpg';
@@ -250,80 +268,143 @@ function AnimatedImg({ src, alt='', style, delay=0 }: { src:string; alt?:string;
   );
 }
 
-function AuthModal({ isOpen, onClose, isSignup, setIsSignup }: { isOpen:boolean; onClose:()=>void; isSignup:boolean; setIsSignup:(b:boolean)=>void; }) {
-  const [email,setEmail]=useState('');
-  const [password,setPassword]=useState('');
-  const [loading,setLoading]=useState(false);
-  const [forgot,setForgot]=useState(false);
-  const [showPw,setShowPw]=useState(false);
+
+/* ── Appointment Booking Modal ── */
+function BookingModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', service: '', date: '', time: '', notes: '' });
+  const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const services = [
+    'Thai Massage Therapy','Biohealing Session','Recovery & Wellness Pool',
+    'Group Yoga Class','Biowell Assessment','Red Light Therapy',
+    'Integrative Consultation','Genomics & Precision Wellness','Corporate Wellness Workshop',
+  ];
+
+  const timeSlots: string[] = [];
+  for (let h = 8; h <= 20; h++) {
+    ['00','30'].forEach(m => {
+      if (h === 20 && m === '30') return;
+      const ampm = h < 12 ? 'AM' : 'PM';
+      const hour = h > 12 ? h - 12 : h === 0 ? 12 : h;
+      timeSlots.push(`${hour}:${m} ${ampm}`);
+    });
+  }
+
+  const minDate = new Date().toISOString().split('T')[0];
 
   const handle = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // SECURITY: Rate limit auth attempts (OWASP A07 - Identification & Auth Failures)
-    const rlKey = forgot ? 'reset' : isSignup ? 'signup' : 'login';
-    if (!checkRateLimit(rlKey, 5, 60_000)) return; // blocked → toast already shown
-
-    // SECURITY: Validate + sanitize inputs (OWASP A03 - Injection)
-    const emailErr = validateSchema({ email, password }, {
-      email: { type: 'email', required: true, max: 254 },
-      ...(!forgot ? { password: { type: 'string', required: true, min: 6, max: 128 } } : {}),
-    });
-    if (emailErr) { toast.error(emailErr); return; }
-    const safeEmail = sanitize(email, 254);
-
-    setLoading(true);
+    if (!checkRateLimit('booking', 3, 120_000)) return;
+    if (!form.name.trim() || form.name.trim().length < 2) { toast.error('Please enter your full name.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { toast.error('Please enter a valid email address.'); return; }
+    if (!form.phone.trim()) { toast.error('Please enter your phone number.'); return; }
+    if (!form.service) { toast.error('Please select a service.'); return; }
+    if (!form.date) { toast.error('Please select a preferred date.'); return; }
+    if (!form.time) { toast.error('Please select a preferred time.'); return; }
+    setSending(true);
     try {
-      if(forgot){ const {error}=await supabase.auth.resetPasswordForEmail(safeEmail,{redirectTo:`${window.location.origin}/dashboard`}); if(error)throw error; toast.success('Reset link sent!'); setForgot(false); }
-      else if(isSignup){ const {error}=await supabase.auth.signUp({email:safeEmail,password}); if(error)throw error; toast.success('Account created -- verify your email ✦'); }
-      else { const {error}=await supabase.auth.signInWithPassword({email:safeEmail,password}); if(error)throw error; toast.success('Welcome back ✦'); }
-      onClose();
-    } catch(err:any){toast.error(err.message);}
-    finally{setLoading(false);}
+      const { error } = await supabase.from('appointments').insert([{
+        name: sanitize(form.name, 100),
+        email: sanitize(form.email, 254),
+        phone: sanitize(form.phone, 30),
+        service: sanitize(form.service, 150),
+        preferred_date: form.date,
+        preferred_time: form.time,
+        notes: sanitize(form.notes, 1000),
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      }]);
+      if (error) throw error;
+      setDone(true);
+    } catch (err: any) {
+      toast.error(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
-  if(!isOpen) return null;
+  const reset = () => { setForm({ name:'',email:'',phone:'',service:'',date:'',time:'',notes:'' }); setDone(false); onClose(); };
+
+  if (!isOpen) return null;
+
   return (
-    <div style={{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16,background:'rgba(0,0,0,0.7)',backdropFilter:'blur(10px)'}}>
+    <div style={{position:'fixed',inset:0,zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:16,background:'rgba(0,0,0,0.72)',backdropFilter:'blur(10px)'}}>
       <motion.div initial={{opacity:0,scale:.96,y:14}} animate={{opacity:1,scale:1,y:0}} exit={{opacity:0,scale:.96}}
-        style={{width:'100%',maxWidth:440,padding:40,position:'relative',background:'#ffffff',border:'1px solid #d4d4d8'}}>
-        <button onClick={onClose} style={{position:'absolute',top:16,right:16,background:'none',border:'none',cursor:'pointer',color:'#a1a1aa',lineHeight:1}} onMouseEnter={e=>(e.currentTarget.style.color=gold)} onMouseLeave={e=>(e.currentTarget.style.color='#a1a1aa')}>
-          <X style={{width:16,height:16}} />
+        style={{width:'100%',maxWidth:520,maxHeight:'92vh',overflowY:'auto',padding:40,position:'relative',background:'#ffffff',border:'1px solid #d4d4d8'}}>
+        <button onClick={reset} style={{position:'absolute',top:16,right:16,background:'none',border:'none',cursor:'pointer',color:'#a1a1aa'}}>
+          <X style={{width:16,height:16}}/>
         </button>
-        <div style={{textAlign:'center',marginBottom:28}}>
-          <img src={LOGO} alt="logo" style={{height:44,margin:'0 auto 14px',objectFit:'contain',display:'block'}} />
-          <div className="fd" style={{fontSize:24,color:'#18181b'}}>{forgot?'Reset Password':isSignup?'Create Account':'Welcome Back'}</div>
-          <div style={{fontSize:9,letterSpacing:'3px',color:'#059669',marginTop:4,textTransform:'uppercase'}}>{forgot?'Enter your email':isSignup?'Join Bliss Now Global':'Sign in to your account'}</div>
-        </div>
-        <GL />
-        <form onSubmit={handle} style={{marginTop:24,display:'flex',flexDirection:'column',gap:14}}>
-          <div>
-            <label style={{display:'block',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#71717a',marginBottom:7}}>Email</label>
-            <input type="email" value={email} onChange={e=>setEmail(e.target.value)} style={{padding:'12px 14px',fontSize:13}} placeholder="your@email.com" required />
-          </div>
-          {!forgot&&(<div>
-            <label style={{display:'block',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#71717a',marginBottom:7}}>Password</label>
-            <div style={{position:'relative'}}>
-              <input type={showPw?'text':'password'} value={password} onChange={e=>setPassword(e.target.value)} style={{padding:'12px 50px 12px 14px',fontSize:13}} placeholder="••••••••" required />
-              <button type="button" onClick={()=>setShowPw(v=>!v)} style={{position:'absolute',right:12,top:'50%',transform:'translateY(-50%)',fontSize:9,letterSpacing:'2px',textTransform:'uppercase',color:'#059669',background:'none',border:'none',cursor:'pointer'}}>{showPw?'hide':'show'}</button>
+        {done ? (
+          <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} style={{textAlign:'center',padding:'20px 0'}}>
+            <div style={{width:64,height:64,borderRadius:'50%',background:'rgba(5,150,105,0.1)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 24px'}}>
+              <CheckCircle style={{width:32,height:32,color:'#059669'}}/>
             </div>
-          </div>)}
-          {!isSignup&&!forgot&&(<div style={{textAlign:'right'}}>
-            <button type="button" onClick={()=>setForgot(true)} style={{fontSize:9,letterSpacing:'2px',textTransform:'uppercase',color:'#a1a1aa',background:'none',border:'none',cursor:'pointer'}} onMouseEnter={e=>(e.currentTarget.style.color=gold)} onMouseLeave={e=>(e.currentTarget.style.color='#a1a1aa')}>Forgot password?</button>
-          </div>)}
-          <button type="submit" className="btn-gold" disabled={loading} style={{padding:'14px',marginTop:4,width:'100%'}}>{loading?'...':forgot?'Send Reset Link':isSignup?'Create Account':'Sign In'}</button>
-        </form>
-        <div style={{textAlign:'center',marginTop:18,fontSize:11,color:'#a1a1aa'}}>
-          {forgot?(<button onClick={()=>setForgot(false)} style={{color:'#059669',background:'none',border:'none',cursor:'pointer'}}>← Back to sign in</button>)
-          :isSignup?(<>Already a member? <button onClick={()=>setIsSignup(false)} style={{color:'#059669',background:'none',border:'none',cursor:'pointer'}}>Sign in</button></>)
-          :(<>New here? <button onClick={()=>setIsSignup(true)} style={{color:'#059669',background:'none',border:'none',cursor:'pointer'}}>Create account</button></>)}
-        </div>
+            <div className="fd" style={{fontSize:32,color:'#18181b',marginBottom:10}}>Booking Received ✦</div>
+            <div style={{fontSize:10,letterSpacing:'4px',textTransform:'uppercase',color:'#059669',marginBottom:20}}>We will confirm shortly</div>
+            <p style={{fontSize:13,lineHeight:1.8,color:'#71717a',marginBottom:28}}>
+              Thank you, <strong>{form.name}</strong>. Your request for <strong>{form.service}</strong> on <strong>{form.date}</strong> at <strong>{form.time}</strong> has been received. We will contact you at <strong>{form.email}</strong> to confirm.
+            </p>
+            <button className="btn-gold" onClick={reset} style={{padding:'12px 32px'}}>Close</button>
+          </motion.div>
+        ) : (
+          <>
+            <div style={{textAlign:'center',marginBottom:28}}>
+              <img src={LOGO} alt="logo" style={{height:44,margin:'0 auto 14px',objectFit:'contain',display:'block'}}/>
+              <div className="fd" style={{fontSize:26,color:'#18181b'}}>Book an Appointment</div>
+              <div style={{fontSize:9,letterSpacing:'3px',color:'#059669',marginTop:4,textTransform:'uppercase'}}>Bliss Now — Recovery Wellness Clinic</div>
+            </div>
+            <GL/>
+            <form onSubmit={handle} style={{marginTop:24,display:'flex',flexDirection:'column',gap:14}}>
+              <div>
+                <label style={{display:'block',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#71717a',marginBottom:7}}>Full Name *</label>
+                <input type="text" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="Your full name" style={{padding:'12px 14px',fontSize:13}}/>
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#71717a',marginBottom:7}}>Email Address *</label>
+                <input type="email" value={form.email} onChange={e=>setForm({...form,email:e.target.value})} placeholder="your@email.com" style={{padding:'12px 14px',fontSize:13}}/>
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#71717a',marginBottom:7}}>Phone Number *</label>
+                <input type="tel" value={form.phone} onChange={e=>setForm({...form,phone:e.target.value})} placeholder="+971 56 480 9600" style={{padding:'12px 14px',fontSize:13}}/>
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#71717a',marginBottom:7}}>Service *</label>
+                <select value={form.service} onChange={e=>setForm({...form,service:e.target.value})} style={{padding:'12px 14px',fontSize:13}}>
+                  <option value="">Select a service</option>
+                  {services.map(s=><option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                <div>
+                  <label style={{display:'block',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#71717a',marginBottom:7}}>Preferred Date *</label>
+                  <input type="date" min={minDate} value={form.date} onChange={e=>setForm({...form,date:e.target.value})} style={{padding:'12px 14px',fontSize:13}}/>
+                </div>
+                <div>
+                  <label style={{display:'block',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#71717a',marginBottom:7}}>Preferred Time *</label>
+                  <select value={form.time} onChange={e=>setForm({...form,time:e.target.value})} style={{padding:'12px 14px',fontSize:13}}>
+                    <option value="">Select time</option>
+                    {timeSlots.map(t=><option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style={{display:'block',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#71717a',marginBottom:7}}>Additional Notes</label>
+                <textarea value={form.notes} onChange={e=>setForm({...form,notes:e.target.value})} style={{padding:'12px 14px',fontSize:13,height:90,resize:'none'}} placeholder="Any specific requirements or health concerns..."/>
+              </div>
+              <motion.button type="submit" disabled={sending} className="btn-gold" whileHover={{scale:1.02}} style={{padding:'14px',marginTop:4}}>
+                {sending ? 'Submitting...' : 'Request Appointment ✦'}
+              </motion.button>
+              <p style={{fontSize:11,color:'#a1a1aa',textAlign:'center',lineHeight:1.6}}>Our team will confirm your booking within 24 hours via email or phone.</p>
+            </form>
+          </>
+        )}
       </motion.div>
     </div>
   );
 }
 
-function Navbar({user,onLogin,onLogout}:{user:any;onLogin:()=>void;onLogout:()=>void;}) {
+function Navbar({onBook}:{onBook:()=>void}) {
   const [open,setOpen]=useState(false);
   const [scrolled,setScrolled]=useState(false);
   useEffect(()=>{ const fn=()=>setScrolled(window.scrollY>40); window.addEventListener('scroll',fn); return()=>window.removeEventListener('scroll',fn); },[]);
@@ -331,7 +412,6 @@ function Navbar({user,onLogin,onLogout}:{user:any;onLogin:()=>void;onLogout:()=>
   const links=[
     {to:'/',label:'Home'},{to:'/about',label:'About Us'},{to:'/consultancy',label:'Consultancy'},
     {to:'/ecosystem',label:'Our Ecosystem'},{to:'/contact',label:'Contact Us'},
-    ...(user?[{to:'/dashboard',label:'Dashboard'}]:[]),
   ];
 
   return (
@@ -348,7 +428,7 @@ function Navbar({user,onLogin,onLogout}:{user:any;onLogin:()=>void;onLogout:()=>
                 style={{fontSize:14,letterSpacing:'1.5px',textTransform:'uppercase',color:'#000000',fontWeight:500,transition:'color .2s'}}
                 onMouseEnter={e=>(e.currentTarget.style.color='#059669')} onMouseLeave={e=>(e.currentTarget.style.color='#111111')}>{l.label}</Link>
             ))}
-            <button className="btn-gold" onClick={user?onLogout:onLogin} style={{padding:'10px 22px'}}>{user?'Sign Out':'Get Quotes'}</button>
+            <button className="btn-gold" onClick={onBook} style={{padding:'10px 22px'}}>Book Appointment</button>
           </div>
           <button className="show-mobile" onClick={()=>setOpen(v=>!v)} style={{background:'none',border:'none',cursor:'pointer',color:'#059669',padding:4}}>
             {open?<X style={{width:22,height:22}}/>:<Menu style={{width:22,height:22}}/>}
@@ -366,7 +446,7 @@ function Navbar({user,onLogin,onLogout}:{user:any;onLogin:()=>void;onLogout:()=>
                     {l.label}<ChevronRight style={{width:12,height:12,color:'#059669'}}/>
                   </Link>
                 ))}
-                <button className="btn-gold" onClick={()=>{setOpen(false);user?onLogout():onLogin();}} style={{padding:'12px',marginTop:14,width:'100%'}}>{user?'Sign Out':'Get Quotes'}</button>
+                <button className="btn-gold" onClick={()=>{setOpen(false);onBook();}} style={{padding:'12px',marginTop:14,width:'100%'}}>Book Appointment</button>
               </div>
             </motion.div>
           )}
@@ -377,7 +457,7 @@ function Navbar({user,onLogin,onLogout}:{user:any;onLogin:()=>void;onLogout:()=>
   );
 }
 
-function Footer() {
+function Footer({onBook}:{onBook:()=>void}) {
   return (
     <footer style={{background:'#18181b',borderTop:'1px solid #e4e4e7',padding:'64px 0 32px'}}>
       <div style={{maxWidth:1200,margin:'0 auto',padding:'0 24px'}}>
@@ -423,7 +503,7 @@ function Footer() {
   );
 }
 
-function Home({onLogin}:{onLogin:()=>void}) {
+function Home({onBook}:{onBook:()=>void}) {
   const [openFaq,setOpenFaq]=useState<number|null>(null);
 
   const services=[
@@ -454,7 +534,7 @@ function Home({onLogin}:{onLogin:()=>void}) {
             <h1 className="fd" style={{fontSize:'clamp(44px,8vw,92px)',lineHeight:1.05,color:'#0d1a0d',marginBottom:24}}>Building the Future of<br/><em style={{color:'#059669'}}>Preventive Infrastructure</em></h1>
             <p style={{maxWidth:480,margin:'0 auto 40px',fontSize:15,lineHeight:1.8,color:'#52525b'}}>Global Infrastructure for Preventive & Predictive Care. A human-centered approach helping individuals and teams reduce stress and build healthy routines.</p>
             <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:16}}>
-              <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} className="btn-gold" onClick={onLogin} style={{padding:'14px 40px'}}>Start Your Journey</motion.button>
+              <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} className="btn-gold" onClick={onBook} style={{padding:'14px 40px'}}>Book Appointment</motion.button>
               <Link to="/about"><motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} className="btn-outline" style={{padding:'14px 40px',border:'1px solid #059669',color:'#059669',background:'transparent'}}>Learn More</motion.button></Link>
             </div>
           </motion.div>
@@ -554,7 +634,7 @@ function Home({onLogin}:{onLogin:()=>void}) {
         <div style={{position:'relative',zIndex:1}}>
           <div style={{fontSize:9,letterSpacing:'6px',textTransform:'uppercase',color:'#059669',marginBottom:20}}>Ready to Begin</div>
           <h2 className="fd" style={{fontSize:'clamp(32px,5vw,64px)',color:'#0d1a0d',lineHeight:1.2,marginBottom:32}}>Ready to Create<br/><em style={{color:'#059669'}}>Better Balance?</em></h2>
-          <motion.button className="btn-gold" whileHover={{scale:1.04}} whileTap={{scale:.97}} onClick={onLogin} style={{padding:'16px 48px'}}>Book a Free Consultation</motion.button>
+          <motion.button className="btn-gold" whileHover={{scale:1.04}} whileTap={{scale:.97}} onClick={onBook} style={{padding:'16px 48px'}}>Book a Free Consultation</motion.button>
         </div>
       </div>
     </div>
@@ -723,7 +803,7 @@ function Ecosystem() {
   );
 }
 
-function Contact() {
+function Contact({onBook}:{onBook:()=>void}) {
   const [form,setForm]=useState({name:'',email:'',phone:'',company:'',subject:'',message:''});
   const [sending,setSending]=useState(false);
   const handle=async(e:React.FormEvent)=>{
@@ -868,81 +948,33 @@ function Contact() {
   );
 }
 
-function Dashboard() {
-  const [user,setUser]=useState<any>(null);
-  useEffect(()=>{
-    supabase.auth.getSession().then(({data:{session}})=>setUser(session?.user??null));
-    const {data:l}=supabase.auth.onAuthStateChange((_,s)=>setUser(s?.user??null));
-    return()=>l.subscription.unsubscribe();
-  },[]);
-  if(!user) return(
-    <div style={{background:'#ffffff',minHeight:'60vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12}}>
-      <div className="fd" style={{fontSize:48,color:'#18181b'}}>Your Sanctuary</div>
-      <div style={{fontSize:10,letterSpacing:'4px',textTransform:'uppercase',color:'#059669'}}>Please sign in to continue</div>
-    </div>
-  );
-  return(
-    <div style={{background:'#ffffff',minHeight:'80vh',maxWidth:800,margin:'0 auto',padding:'60px 24px'}}>
-      <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',marginBottom:8}}>Welcome Back</div>
-      <div className="fd" style={{fontSize:48,color:'#18181b',marginBottom:8}}>Your Dashboard</div>
-      <div style={{fontSize:13,color:'#a1a1aa',marginBottom:40}}>{user.email}</div>
-      <GL/>
-      <div style={{marginTop:40,display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:16}}>
-        {[{label:'Member Since',value:format(new Date(user.created_at),'MMM yyyy')},{label:'Account Status',value:'Active'},{label:'Plan',value:'Professional'}].map((s,i)=>(
-          <motion.div key={i} className="card" whileHover={{y:-4}} style={{padding:28,textAlign:'center',background:'#f4f4f5'}}>
-            <div style={{fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#059669',marginBottom:8}}>{s.label}</div>
-            <div className="fd" style={{fontSize:28,color:'#18181b'}}>{s.value}</div>
-          </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export default function App() {
-  const [user,setUser]=useState<any>(null);
-  const [showAuth,setShowAuth]=useState(false);
-  const [isSignup,setIsSignup]=useState(false);
-  // LOADING SCREEN: show intro animation on first load
-  const [loading,setLoading]=useState(true);
+  const [showBooking, setShowBooking] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(()=>{
-    // SECURITY: ensure Supabase env vars are present (OWASP A05)
-    const url = import.meta.env.VITE_SUPABASE_URL;
-    const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-    if (!url || url.includes('your-project') || !key || key.includes('your-anon')) {
-      console.warn('[Security] Supabase env vars not set. Check your .env file.');
-    }
-
-    supabase.auth.getSession().then(({data:{session}})=>setUser(session?.user??null));
-    const {data:{subscription}}=supabase.auth.onAuthStateChange((_,s)=>setUser(s?.user??null));
-    return()=>subscription.unsubscribe();
-  },[]);
-
-  const handleLogout=async()=>{await supabase.auth.signOut();toast.success('Until next time ✦');};
-
-  return(
+  return (
     <>
-      {/* LOADING / INTRO SCREEN */}
       <AnimatePresence>
-        {loading && <LoadingScreen onDone={()=>setLoading(false)} />}
+        {loading && <LoadingScreen onDone={() => setLoading(false)} />}
       </AnimatePresence>
 
       <div style={{fontFamily:"'Jost',sans-serif",background:'#ffffff',color:'#18181b',minHeight:'100vh'}}>
         <ScrollToTop/>
-        <Navbar user={user} onLogin={()=>setShowAuth(true)} onLogout={handleLogout}/>
+        <Navbar onBook={() => setShowBooking(true)}/>
         <Routes>
-          <Route path="/" element={<Home onLogin={()=>setShowAuth(true)}/>}/>
+          <Route path="/" element={<Home onBook={() => setShowBooking(true)}/>}/>
           <Route path="/about" element={<About/>}/>
           <Route path="/consultancy" element={<Consultancy/>}/>
           <Route path="/ecosystem" element={<Ecosystem/>}/>
-          <Route path="/contact" element={<Contact/>}/>
-          <Route path="/dashboard" element={<Dashboard/>}/>
+          <Route path="/contact" element={<Contact onBook={() => setShowBooking(true)}/>}/>
         </Routes>
-        <Footer/>
-        <AuthModal isOpen={showAuth} onClose={()=>setShowAuth(false)} isSignup={isSignup} setIsSignup={setIsSignup}/>
+        <Footer onBook={() => setShowBooking(true)}/>
 
-        {/* ── WhatsApp Floating Button ── */}
+        <AnimatePresence>
+          {showBooking && <BookingModal isOpen={showBooking} onClose={() => setShowBooking(false)}/>}
+        </AnimatePresence>
+
+        {/* WhatsApp Floating Button */}
         <motion.a
           href="https://wa.me/971564809600?text=Hello%20Bliss%20Now!%20I%20would%20like%20to%20know%20more%20about%20your%20services."
           target="_blank" rel="noopener noreferrer"
@@ -963,7 +995,6 @@ export default function App() {
           <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
           </svg>
-          {/* Pulse ring */}
           <motion.div
             animate={{scale:[1,1.5,1],opacity:[0.6,0,0.6]}}
             transition={{duration:2,repeat:Infinity}}
