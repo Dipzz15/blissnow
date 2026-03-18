@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { Menu, X, Phone, Mail, MapPin, ChevronRight, CheckCircle, Star } from 'lucide-react';
+import { Menu, X, Phone, Mail, MapPin, ChevronRight, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
