@@ -805,6 +805,7 @@ function Ecosystem() {
 }
 
 function Contact({onBook}:{onBook:()=>void}) {
+  const [form,setForm]=useState({name:'',email:'',phone:'',company:'',subject:'',message:''});
   const [sending,setSending]=useState(false);
   const handle=async(e:React.FormEvent)=>{
     e.preventDefault();
