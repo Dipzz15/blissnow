@@ -9,11 +9,9 @@ import { format } from 'date-fns';
 // ── Local Images (place these in src/assets/ folder) ──
 import imgThaiMassage from './assets/img_thai_massage.jpg';
 import imgBiohealing from './assets/img_biohealing.jpg';
-import imgYogaBalance from './assets/img_yoga_balance.jpg';
 import imgWellnessPool from './assets/img_wellness_pool.jpg';
 import imgGroupYoga from './assets/img_group_yoga.jpg';
-import imgFitnessTraining from './assets/img_fitness_training.jpg';
-import imgDryNeedling from './assets/img_dry_needling.jpg';
+import imgYogaBalance from './assets/img_yoga_balance.jpg';
 import imgBiowell from './assets/img_biowell.jpg';
 import imgRedLight from './assets/img_red_light.jpg';
 
@@ -147,21 +145,30 @@ function LoadingScreen({ onDone }: { onDone: () => void }) {
         position: 'fixed', inset: 0, zIndex: 9999,
         background: '#ffffff',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        flexDirection: 'column', gap: 24,
+        flexDirection: 'column', gap: 'clamp(12px,3vw,24px)',
+        padding: '0 16px',
       }}
     >
-      {/* Animated glow orb behind text */}
+      {/* Glow orb — responsive size using vw/vh */}
       <motion.div
         initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 0.25, scale: 1 }}
+        animate={{ opacity: 0.22, scale: 1 }}
         transition={{ duration: 1.5, ease: 'easeOut' }}
         style={{
-          position: 'absolute', width: 500, height: 300,
+          position: 'absolute',
+          width: 'min(500px, 90vw)',
+          height: 'min(300px, 40vh)',
           background: 'radial-gradient(ellipse, #059669 0%, transparent 70%)',
-          filter: 'blur(60px)', pointerEvents: 'none',
+          filter: 'blur(clamp(30px,6vw,60px))',
+          pointerEvents: 'none',
         }}
       />
-      <div style={{ display: 'flex', gap: 4, alignItems: 'center', position: 'relative' }}>
+      {/* Text row — wraps gracefully on small screens */}
+      <div style={{
+        display: 'flex', flexWrap: 'wrap', justifyContent: 'center',
+        gap: 'clamp(1px,0.5vw,4px)', alignItems: 'center',
+        position: 'relative', maxWidth: '95vw',
+      }}>
         {text.split('').map((char, i) => (
           <motion.span
             key={i}
@@ -170,11 +177,11 @@ function LoadingScreen({ onDone }: { onDone: () => void }) {
             transition={{ delay: i * 0.06, duration: 0.5, ease: 'easeOut' }}
             style={{
               fontFamily: "'Cormorant Garamond', serif",
-              fontSize: char === ' ' ? 24 : 38,
-              letterSpacing: '8px',
+              fontSize: char === ' ' ? 0 : 'clamp(18px,5vw,38px)',
+              letterSpacing: 'clamp(4px,1.5vw,8px)',
               color: '#059669',
               display: 'inline-block',
-              minWidth: char === ' ' ? 18 : 'auto',
+              minWidth: char === ' ' ? 'clamp(8px,2vw,18px)' : 'auto',
               textShadow: '0 0 40px rgba(5,150,105,0.6), 0 0 80px rgba(5,150,105,0.2)',
             }}
           >
@@ -182,17 +189,26 @@ function LoadingScreen({ onDone }: { onDone: () => void }) {
           </motion.span>
         ))}
       </div>
+      {/* Divider line */}
       <motion.div
         initial={{ width: 0, opacity: 0 }}
-        animate={{ width: 180, opacity: 1 }}
+        animate={{ width: 'min(180px,50vw)', opacity: 1 }}
         transition={{ delay: 1.1, duration: 1, ease: 'easeInOut' }}
-        style={{ height: 1, background: 'linear-gradient(90deg, transparent, #059669, transparent)', position: 'relative' }}
+        style={{ height: 1, background: 'linear-gradient(90deg, transparent, #059669, transparent)' }}
       />
+      {/* Subtitle */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5, duration: 0.6 }}
-        style={{ fontSize: 10, letterSpacing: '6px', textTransform: 'uppercase', color: 'rgba(5,150,105,0.8)', fontFamily: "'Jost', sans-serif" }}
+        style={{
+          fontSize: 'clamp(7px,1.8vw,10px)',
+          letterSpacing: 'clamp(3px,1.2vw,6px)',
+          textTransform: 'uppercase',
+          color: 'rgba(5,150,105,0.8)',
+          fontFamily: "'Jost', sans-serif",
+          textAlign: 'center',
+        }}
       >
         Recovery Physiotherapy Clinic
       </motion.div>
@@ -416,172 +432,6 @@ function Home({onLogin}:{onLogin:()=>void}) {
     {icon:'🏥',title:'Our Ecosystem',desc:'Connecting clinics, genomics, diagnostics, and digital intelligence into one unified infrastructure.'},
     {icon:'⚡',title:'Burnout Recovery',desc:'A structured program to help professionals recover from burnout and regain balance.'},
   ];
-  const steps=[
-    {n:'01',title:'Initial Assessment',desc:'We start by understanding your current challenges, goals, and environment.'},
-    {n:'02',title:'Personalized Plan',desc:'We create a tailored action plan focused on balance, clarity, and sustainable routines.'},
-    {n:'03',title:'Ongoing Support',desc:'We provide continuous guidance, feedback, and adjustments to ensure progress.'},
-  ];
-  const testimonials=[
-    {
-      name:'Clauricio Neto',
-      img:'https://ui-avatars.com/api/?name=Clauricio+Neto&background=059669&color=fff&size=80',
-      text:'I would like to thank you for your professionalism and excellent care. Yazan is one of the most skilled physiotherapists I have ever worked with. He applies precise trigger point techniques that are both effective and results-driven. After just a few sessions, I experienced significant relief, improved mobility, and overall better body function. Highly recommend!',
-      verified:true,
-    },
-    {
-      name:'Greg Basilio',
-      img:'https://ui-avatars.com/api/?name=Greg+Basilio&background=e05c2a&color=fff&size=80',
-      text:'Therapist Yazan helps me to comeback in running & cycling after my (literally) first session with him due to my stiffed & muscle spasm...been to other therapist but never experienced the way he treat my pain, coming back and still on my road to recovery but this clinic is worth to try.',
-      verified:true,
-    },
-    {
-      name:'Tarek El Hout',
-      img:'https://ui-avatars.com/api/?name=Tarek+El+Hout&background=e05c2a&color=fff&size=80',
-      text:'Excellent sports massage by Yazan. He always manages to take away my pain. Great pressure and technique, also really skilled with cupping and physio exercises.',
-      verified:true,
-    },
-    {
-      name:'Avanti B',
-      img:'https://ui-avatars.com/api/?name=Avanti+B&background=4285F4&color=fff&size=80',
-      text:'Me and my husband got to know of Bliss Now for recovery after extensive cycling and sports. During my 1st consultation I could see their doctors and therapist have in depth knowledge. It is good to know next to the Gym in Silicon Oasis we have this kind of wellness and recovery place specialising in Sports Massage, dry needling, cupping therapy. My husband and I feel relief from pain and that comforting lightness again. We would recommend to our friends!',
-      verified:true,
-    },
-    {
-      name:'Jad Kobrossi',
-      img:'https://ui-avatars.com/api/?name=Jad+Kobrossi&background=7c3aed&color=fff&size=80',
-      text:'excellent!!!! I had shoulder and back pain for so long... but from the FIRST session with Yazan I felt a huge difference! Perfect pressure, clear explanation, and helpful exercises. Now I can move without pain again. Highly recommend!',
-      verified:true,
-    },
-    {
-      name:'Ahmed Babiker',
-      img:'https://ui-avatars.com/api/?name=Ahmed+Babiker&background=e05c2a&color=fff&size=80',
-      text:'My first session there was amazing and I did it with the best Yazan and he explain to me everything and fix me before my competition and was really a big difference to feel relief after the session and feeling good. And for sure I am gonna keep my session with him.',
-      verified:true,
-    },
-    {
-      name:'Bashar Shbeb',
-      img:'https://ui-avatars.com/api/?name=Bashar+Shbeb&background=059669&color=fff&size=80',
-      text:'Had an excellent recovery massage session. Yazan is very professional, skilled, and knows exactly what he is doing. I felt a huge difference and deep relief right after the session. Highly recommended!',
-      verified:true,
-    },
-    {
-      name:'momen amin (الزنجبالي)',
-      img:'https://ui-avatars.com/api/?name=Momen+Amin&background=059669&color=fff&size=80',
-      text:'I truly appreciate their strong knowledge and deep expertise in handling injuries. They understand exactly what they are doing, explain every step clearly, and provide professional guidance that makes you feel safe and confident. Highly recommended for anyone looking for real experience and excellent care.',
-      verified:true,
-    },
-    {
-      name:'Asma Ahmad',
-      img:'https://ui-avatars.com/api/?name=Asma+Ahmad&background=e05c2a&color=fff&size=80',
-      text:'I have tried one of the therapists, Yazan, a magician in a form of human. With his gracious hands was able to sooth knots in my shoulders and have improved my mobility significantly. He knows what he is doing and understands the anatomy of the muscles. I strongly recommend him for rehabilitation and sports massages.',
-      verified:true,
-    },
-    {
-      name:'youssef hamed',
-      img:'https://ui-avatars.com/api/?name=Youssef+Hamed&background=7c3aed&color=fff&size=80',
-      text:'To be honest, I have tried dozens of physiotherapy clinics, but none came close to this one. Dr. Yazan is simply exceptional -- it felt like magic. He identified and treated every issue with such precision and deep understanding of how each muscle works and heals. Truly the best experience I have ever had.',
-      verified:true,
-    },
-    {
-      name:'Aymen Raseloued',
-      img:'https://ui-avatars.com/api/?name=Aymen+Raseloued&background=059669&color=fff&size=80',
-      text:'Awesome experience! I have tried many many physiotherapy clinics and doctors.. but Dr. Yazan is an exception really. He was so special in identifying and treating each issue with such precision that made me really wanna stay there for the day long haha, I will definitely visit again.',
-      verified:true,
-    },
-    {
-      name:'Bárbara Cavalcanti',
-      img:'https://ui-avatars.com/api/?name=Barbara+Cavalcanti&background=4285F4&color=fff&size=80',
-      text:'I had an amazing experience at Bliss Hub! I went for acupuncture and cupping and it was exactly what I needed. The treatment really helped with my back pain and was super relaxing. The staff was professional and welcoming. It is conveniently located inside Silicon Mall, within UFC Gym. Definitely worth a visit!',
-      verified:true,
-    },
-    {
-      name:'Baker Nassour',
-      img:'https://ui-avatars.com/api/?name=Baker+Nassour&background=e05c2a&color=fff&size=80',
-      text:'I had a great experience at this physiotherapy center. Yazan is very professional, knowledgeable, and genuinely cares about his patients. He explained every step of the treatment clearly and made sure I was comfortable throughout the sessions. I noticed real improvement in a short time. Highly recommended.',
-      verified:true,
-    },
-  ];
-  const pricing=[
-    {
-      name:'Performance',
-      price:'AED 5,999',
-      old:'AED 13,820',
-      desc:'Entry-level structured health plan for individuals beginning their wellness journey.',
-      perks:[
-        '🏋️ UFC Gym -- All branches unlimited access',
-        '🩺 Onboarding wellness assessment',
-        '🧬 20% discount on genetic wellness testing',
-        '💆 1 physiotherapy & performance assessment',
-        '💆 6 physiotherapy or sports massage sessions',
-        '🥗 1 dietitian consultation',
-        '💡 1 personal fitness coaching session',
-        '🔴 Red light therapy -- 2/month',
-        '❄️ Cold plunge -- 2/month',
-        '🩹 Compression therapy -- 2/month',
-        '🍹 10% discount at UFC Arm Bar',
-        '🎉 2 wellness community events/year',
-      ],
-      popular:false
-    },
-    {
-      name:'Presence',
-      price:'AED 9,999',
-      old:'AED 26,760',
-      desc:'Comprehensive wellness architecture for consistent health and performance.',
-      perks:[
-        '🏋️ UFC Gym -- All branches unlimited access',
-        '🩺 Onboarding wellness assessment',
-        '🧬 Fitness genetics test (1 report, 1 kit)',
-        '🔬 Blood biomarkers -- Basic Wellness (19 parameters) × 2/year',
-        '💆 2 physiotherapy & performance assessments',
-        '💆 8 physiotherapy or sports massage sessions',
-        '🏷️ 25% discount on additional sessions',
-        '🥗 3 dietitian consultations',
-        '💊 Basic supplement recommendation',
-        '💡 4 personal fitness coaching sessions',
-        '📊 2 health & performance monitoring screenings',
-        '🔴 Red light therapy -- 4/month',
-        '❄️ Cold plunge -- 4/month',
-        '🩹 Compression therapy -- 4/month',
-        '🍹 20% discount at UFC Arm Bar',
-        '🎉 4 wellness community events/year',
-        '👶 10 children activity sessions (dance/music)',
-      ],
-      popular:true
-    },
-    {
-      name:'Precision',
-      price:'AED 17,999',
-      old:'AED 46,100',
-      desc:'The ultimate 12-month structured health architecture for peak performance and longevity.',
-      perks:[
-        '🏋️ UFC Gym -- All branches unlimited access',
-        '🩺 Onboarding wellness assessment',
-        '🧬 2 genetic reports (1 kit included)',
-        '🔬 Blood biomarkers -- General Wellness (53 parameters) × 2/year',
-        '⚡ 2 BioWell energy assessments',
-        '🎂 Biological age assessment',
-        '💆 Alternative medicine consultation with gut & sleep guidance',
-        '📋 Quarterly physiotherapy & performance review',
-        '💆 12 physiotherapy or sports massage sessions',
-        '🏷️ 25% discount on additional sessions',
-        '🥗 6 DHA dietitian consultations & nutrition plan',
-        '💊 Personalized supplement plan',
-        '💡 8 personal fitness coaching sessions',
-        '📊 4 health & performance monitoring screenings',
-        '📈 Quarterly strategy reviews',
-        '⌚ Integrated wearable performance tracking device',
-        '🔴 Red light therapy -- 6/month',
-        '❄️ Cold plunge -- 6/month',
-        '🩹 Compression therapy -- 6/month',
-        '🍹 30% discount at UFC Arm Bar',
-        '🎉 8 wellness community events/year',
-        '👶 20 children activity sessions + 5 playground visits',
-        '🥊 50% discount on UFC Kids classes (Jiu-Jitsu/Kickboxing)',
-      ],
-      popular:false
-    },
-  ];
   const faqs=[
     {q:'Who is this consulting service for?',a:'Our services are designed for professionals, teams, and organizations seeking healthier work-life balance and sustainable ways of working.'},
     {q:'Is this suitable for individuals and companies?',a:'Yes. We work with both individuals and companies looking to build healthier workplace cultures.'},
@@ -665,175 +515,9 @@ function Home({onLogin}:{onLogin:()=>void}) {
                 <div style={{fontSize:32,marginBottom:16}}>{s.icon}</div>
                 <div style={{fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#059669',marginBottom:10}}>{s.title}</div>
                 <p style={{fontSize:13,lineHeight:1.8,color:'#71717a',marginBottom:16}}>{s.desc}</p>
-                <div style={{fontSize:10,letterSpacing:'2px',textTransform:'uppercase',color:'#059669',cursor:'pointer'}}>Read More →</div>
+
               </motion.div>
             ))}
-          </div>
-        </div>
-      </div>
-
-      {/* HOW IT WORKS */}
-      <div style={{maxWidth:1200,margin:'0 auto',padding:'96px 24px'}}>
-        <div style={{textAlign:'center',marginBottom:52}}>
-          <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',marginBottom:12}}>How It Works</div>
-          <h2 className="fd" style={{fontSize:'clamp(28px,4vw,52px)',color:'#18181b'}}>A Simple, Human-Centered Process</h2>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(240px,1fr))',gap:24}}>
-          {steps.map((s,i)=>(
-            <motion.div key={i} className="card" whileHover={{y:-5,boxShadow:'0 20px 60px rgba(5,150,105,0.12)'}}
-              initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'-40px'}}
-              transition={{duration:.6,delay:i*0.15}}
-              style={{padding:40,textAlign:'center',background:'#f9fafb',border:'1px solid #e4e4e7'}}>
-              <div className="fd" style={{fontSize:72,color:'rgba(5,150,105,0.12)',lineHeight:1,marginBottom:16}}>{s.n}</div>
-              <div style={{fontSize:9,letterSpacing:'4px',textTransform:'uppercase',color:'#059669',marginBottom:14,fontWeight:600}}>{s.title}</div>
-              <p style={{fontSize:14,lineHeight:1.9,color:'#52525b'}}>{s.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* TESTIMONIALS */}
-      <div style={{background:'#f4f4f5',borderTop:'1px solid #e4e4e7',borderBottom:'1px solid #e4e4e7',padding:'96px 0'}}>
-        <div style={{maxWidth:1200,margin:'0 auto',padding:'0 24px'}}>
-          <FadeIn><div style={{textAlign:'center',marginBottom:52}}>
-            <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',marginBottom:12}}>Google Reviews</div>
-            <h2 className="fd" style={{fontSize:'clamp(28px,4vw,52px)',color:'#18181b'}}>What Our Clients Say</h2>
-            <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,marginTop:12}}>
-              <div style={{display:'flex',gap:2}}>{[1,2,3,4,5].map(k=><Star key={k} style={{width:18,height:18,fill:'#f59e0b',color:'#f59e0b'}}/>)}</div>
-              <span style={{fontSize:22,fontWeight:700,color:'#18181b',marginLeft:4}}>5.0</span>
-              <span style={{fontSize:13,color:'#71717a',marginLeft:4}}>· 13 Google Reviews</span>
-            </div>
-          </div></FadeIn>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:20}}>
-            {testimonials.map((t,i)=>(
-              <motion.div key={i} whileHover={{y:-5}}
-                initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'-40px'}}
-                transition={{duration:.6,delay:i*0.1,ease:[0.25,0.46,0.45,0.94]}}
-                style={{
-                  padding:28,
-                  background:'#ffffff',
-                  border:t.verified?'1px solid rgba(5,150,105,0.3)':'1px solid #e4e4e7',
-                  borderRadius:16,
-                  boxShadow:t.verified?'0 4px 24px rgba(5,150,105,0.08)':'0 2px 8px rgba(0,0,0,0.04)',
-                }}>
-                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
-                  <div style={{display:'flex',gap:2}}>
-                    {[1,2,3,4,5].map(k=><Star key={k} style={{width:13,height:13,fill:'#f59e0b',color:'#f59e0b'}}/>)}
-                  </div>
-                  {t.verified&&(
-                    <div style={{display:'flex',alignItems:'center',gap:4,fontSize:9,letterSpacing:'1px',color:'#4285F4',fontWeight:600}}>
-                      <svg width="12" height="12" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                      </svg>
-                      Google Review
-                    </div>
-                  )}
-                </div>
-                <p style={{fontSize:t.verified?12:13,lineHeight:1.8,color:'#52525b',marginBottom:20,fontStyle:'italic'}}>"{t.text}"</p>
-                <div style={{display:'flex',alignItems:'center',gap:12,borderTop:'1px solid #f4f4f5',paddingTop:14}}>
-                  <img src={t.img} alt="" style={{width:40,height:40,borderRadius:'50%',objectFit:'cover',border:'2px solid #e4e4e7'}}/>
-                  <div>
-                    <div style={{fontSize:13,fontWeight:600,color:'#18181b'}}>{t.name}</div>
-                    <div style={{fontSize:10,letterSpacing:'1px',color:t.verified?'#4285F4':'#059669'}}>{t.verified ? 'Google Review' : ''}</div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* PRICING */}
-      <div style={{maxWidth:1200,margin:'0 auto',padding:'96px 24px'}}>
-        <div style={{textAlign:'center',marginBottom:52}}>
-          <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',marginBottom:12}}>Integrative Care Membership</div>
-          <h2 className="fd" style={{fontSize:'clamp(28px,4vw,52px)',color:'#18181b'}}>Precision. Presence. Performance.</h2>
-          <p style={{maxWidth:640,margin:'16px auto 0',fontSize:14,lineHeight:1.8,color:'#71717a'}}>A 12-month structured health architecture in collaboration with UFC Gym, Dubai Silicon Oasis. Integrated Fitness. Structured Prevention. Long-Term Longevity.</p>
-        </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:20}}>
-          {pricing.map((p,i)=>(
-            <motion.div key={i} whileHover={{y:-6}}
-              initial={{opacity:0,y:30}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'-40px'}}
-              transition={{duration:.6,delay:i*0.12,ease:[0.25,0.46,0.45,0.94]}}
-              style={{
-                padding:40,
-                border:p.popular?'2px solid #059669':'1px solid #e4e4e7',
-                background:p.popular?'linear-gradient(160deg,#f0fdf4,#ffffff)':'#ffffff',
-                position:'relative',
-                transform:p.popular?'scale(1.04)':'scale(1)',
-                boxShadow:p.popular?'0 20px 60px rgba(5,150,105,0.15)':'0 2px 16px rgba(0,0,0,0.04)',
-                zIndex:p.popular?1:0,
-                borderRadius:16,
-              }}>
-              {p.popular&&<div style={{position:'absolute',top:-1,left:0,right:0,height:3,background:'linear-gradient(90deg,transparent,#059669,transparent)',borderRadius:'16px 16px 0 0'}}/>}
-              {p.popular&&<div style={{position:'absolute',top:-14,left:'50%',transform:'translateX(-50%)',background:'linear-gradient(135deg,#059669,#34d399)',color:'#ffffff',fontSize:9,letterSpacing:'3px',textTransform:'uppercase',padding:'4px 16px',whiteSpace:'nowrap',fontWeight:700,borderRadius:20}}>Most Popular</div>}
-              <div style={{fontSize:9,letterSpacing:'3px',textTransform:'uppercase',color:'#059669',marginBottom:6,fontWeight:700}}>{p.name}</div>
-              <div style={{fontSize:12,color:'#71717a',marginBottom:16,lineHeight:1.6}}>{p.desc}</div>
-              <div style={{marginBottom:4}}>
-                <span className="fd" style={{fontSize:42,color:'#18181b',fontWeight:600}}>{p.price}</span>
-                <span style={{fontSize:10,color:'#71717a',marginLeft:6}}>/year</span>
-              </div>
-              {p.old&&<div style={{fontSize:11,color:'#a1a1aa',marginBottom:14}}>Value: <span style={{textDecoration:'line-through'}}>{p.old}</span></div>}
-              <div style={{height:1,background:'#e4e4e7',margin:'14px 0'}}/>
-              <ul style={{listStyle:'none',padding:0,marginBottom:24,maxHeight:260,overflowY:'auto'}}>
-                {p.perks.map((pk,j)=>(
-                  <li key={j} style={{display:'flex',gap:8,fontSize:11,color:'#52525b',marginBottom:8,lineHeight:1.5,alignItems:'flex-start'}}>
-                    {pk}
-                  </li>
-                ))}
-              </ul>
-              <motion.button whileHover={{scale:1.02}} whileTap={{scale:.97}} className={p.popular?'btn-gold':'btn-outline'} style={{width:'100%',padding:'13px',borderRadius:8}}>Get Started</motion.button>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* PHILOSOPHY + DIFFERENCE */}
-      <div style={{background:'#f0fdf4',padding:'80px 0'}}>
-        <div style={{maxWidth:1200,margin:'0 auto',padding:'0 24px'}}>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:48,alignItems:'center'}}>
-            <div>
-              <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',marginBottom:12}}>Our Philosophy</div>
-              <h2 className="fd" style={{fontSize:'clamp(32px,4vw,52px)',color:'#0d1a0d',marginBottom:20,lineHeight:1.2}}>A New Standard<br/>of Living Well</h2>
-              <p style={{fontSize:15,lineHeight:1.9,color:'#52525b',marginBottom:20}}>Bliss Now Life Integrative Care Membership is not a package. It is not a collection of services. It is a <strong style={{color:'#f5f0e8'}}>12-month structured health architecture</strong> designed for individuals and families who choose intention over impulse and longevity over reaction.</p>
-              <p style={{fontSize:14,lineHeight:1.9,color:'#71717a'}}>In collaboration with UFC Gym, we bring together clinical care, performance science, and lifestyle integration into one intelligent system.</p>
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
-              {['Structure over spontaneity','Measurable outcomes','Predictable commitment','Long-term strength'].map((v,i)=>(
-                <div key={i} style={{padding:24,border:'1px solid rgba(5,150,105,0.2)',borderRadius:12,background:'rgba(5,150,105,0.06)'}}>
-                  <div style={{color:'#059669',fontSize:20,marginBottom:8}}>✦</div>
-                  <div style={{fontSize:13,color:'#0d1a0d',fontWeight:500}}>{v}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{height:1,background:'linear-gradient(90deg,transparent,rgba(5,150,105,0.3),transparent)',margin:'64px 0'}}/>
-          <div style={{textAlign:'center',marginBottom:48}}>
-            <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',marginBottom:12}}>The Bliss Now Life Difference</div>
-            <h2 className="fd" style={{fontSize:'clamp(28px,4vw,48px)',color:'#f5f0e8',marginBottom:16}}>We Design Integrated Systems</h2>
-            <p style={{maxWidth:560,margin:'0 auto',fontSize:14,lineHeight:1.8,color:'#71717a'}}>We do not offer scattered services. We do not sell temporary motivation. Bliss Now Life connects:</p>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:16}}>
-            {[
-              {icon:'🏥',title:'Clinical Expertise',desc:'Licensed physiotherapy & integrative medicine'},
-              {icon:'⚡',title:'Performance Science',desc:'UFC Gym partnership & fitness coaching'},
-              {icon:'🔬',title:'Recovery Intelligence',desc:'Red light, cold plunge & compression therapy'},
-              {icon:'👨‍👩‍👧‍👦',title:'Family Lifestyle',desc:"Children's activities & community events"},
-            ].map((d,i)=>(
-              <motion.div key={i} whileHover={{y:-5}} style={{padding:28,border:'1px solid rgba(5,150,105,0.15)',borderRadius:12,background:'rgba(255,255,255,0.03)',textAlign:'center'}}>
-                <div style={{fontSize:32,marginBottom:12}}>{d.icon}</div>
-                <div style={{fontSize:11,letterSpacing:'2px',textTransform:'uppercase',color:'#059669',marginBottom:8}}>{d.title}</div>
-                <div style={{fontSize:12,color:'#71717a',lineHeight:1.6}}>{d.desc}</div>
-              </motion.div>
-            ))}
-          </div>
-          <div style={{marginTop:48,padding:32,border:'1px solid rgba(5,150,105,0.2)',borderRadius:16,background:'rgba(5,150,105,0.08)',textAlign:'center'}}>
-            <div style={{fontSize:13,color:'#059669',letterSpacing:'2px',marginBottom:8}}>ENROLLMENT IS LIMITED</div>
-            <p style={{fontSize:14,color:'#52525b',marginBottom:20,lineHeight:1.7}}>Members receive dedicated onboarding, a structured annual roadmap, exclusive access privileges, and private community events. This is about refinement -- not volume.</p>
-            <div style={{fontSize:20,fontWeight:700,color:'#0d1a0d'}}>📞 +971 56 480 9600</div>
           </div>
         </div>
       </div>
@@ -908,7 +592,7 @@ function About() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:60,alignItems:'center'}}>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
             <AnimatedImg src={imgGroupYoga} style={{width:'100%',height:220}} delay={0} />
-            <AnimatedImg src={imgFitnessTraining} style={{width:'100%',height:220,marginTop:32}} delay={0.2} />
+            <AnimatedImg src={imgBiohealing} style={{width:'100%',height:220,marginTop:32}} delay={0.2} />
           </div>
           <div>
             <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',marginBottom:12}}>Our Approach</div>
@@ -941,29 +625,7 @@ function About() {
           ))}
         </div>
       </div>
-      <div style={{background:'#f4f4f5',borderTop:'1px solid #e4e4e7',padding:'80px 0'}}>
-        <div style={{maxWidth:1200,margin:'0 auto',padding:'0 24px'}}>
-          <div style={{textAlign:'center',marginBottom:48}}>
-            <div style={{fontSize:9,letterSpacing:'5px',textTransform:'uppercase',color:'#059669',marginBottom:12}}>Leadership & Advisors</div>
-            <h2 className="fd" style={{fontSize:'clamp(28px,4vw,52px)',color:'#18181b'}}>The People Behind Bliss Now</h2>
-            <p style={{maxWidth:600,margin:'16px auto 0',fontSize:14,lineHeight:1.8,color:'#a1a1aa'}}>A multidisciplinary leadership team spanning hospitality, healthcare operations, genomics, fitness science, and digital health infrastructure.</p>
-          </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(260px,1fr))',gap:20}}>
-            {[{name:'Harrison Hudson',role:'WordPress Dev.',img:imgFitnessTraining},{name:'Elizabeth Sofia',role:'WordPress Dev.',img:imgYogaBalance},{name:'Lucy Evelyn',role:'UI/UX Designer',img:imgDryNeedling}].map((m,i)=>(
-              <motion.div key={i} className="card" whileHover={{y:-6}}
-                initial={{opacity:0,y:40}} whileInView={{opacity:1,y:0}} viewport={{once:true,margin:'-40px'}}
-                transition={{duration:.65,delay:i*0.15,ease:[0.25,0.46,0.45,0.94]}}
-                style={{overflow:'hidden'}}>
-                <AnimatedImg src={m.img} alt={m.name} style={{width:'100%',height:260}} />
-                <div style={{padding:28,borderTop:'1px solid #e4e4e7'}}>
-                  <div className="fd" style={{fontSize:20,color:'#18181b'}}>{m.name}</div>
-                  <div style={{fontSize:10,letterSpacing:'2px',textTransform:'uppercase',color:'#059669',marginTop:4}}>{m.role}</div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 }
